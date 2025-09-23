@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  This file contains custom CSS that extends Tailwind CSS.
+  It uses @layer directives, which are processed by the Tailwind JIT engine in the browser.
+*/
+
+/*
+  Base Layer: For base styles, element resets, or font-face rules.
+*/
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/*
+  Components Layer: For custom component classes.
+*/
+@layer components {
+  /* Custom scrollbar for tooltip content */
+  .custom-tooltip-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  .custom-tooltip-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-tooltip-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #a0aec0; /* gray-400 */
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .dark .custom-tooltip-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #4a5568; /* gray-600 */
+  }
+}
+
+/*
+  Utilities Layer: For custom utility classes.
+*/
+@layer utilities {
+  /* Animation for simple fading in */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out forwards;
+  }
+
+  /* Animation for modals and dropdowns to fade and scale up */
+  @keyframes fade-in-scale-up {
+      from {
+          opacity: 0;
+          transform: scale(0.95);
+      }
+      to {
+          opacity: 1;
+          transform: scale(1);
+      }
+  }
+  /* The Header dropdown opens from top-right */
+  .animate-fade-in-scale-up {
+      animation: fade-in-scale-up 0.1s ease-out forwards;
+      transform-origin: top right;
+  }
+}

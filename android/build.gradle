@@ -1,0 +1,109 @@
+// // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+// buildscript {
+    
+//     repositories {
+//         google()
+//         mavenCentral()
+//     }
+//     dependencies {
+//         classpath 'com.android.tools.build:gradle:8.7.2'
+//         classpath 'com.google.gms:google-services:4.4.2'
+
+//         // NOTE: Do not place your application dependencies here; they belong
+//         // in the individual module build.gradle files
+//     }
+// }
+
+// apply from: "variables.gradle"
+
+// allprojects {
+//     repositories {
+//         google()
+//         mavenCentral()
+//     }
+// }
+
+// task clean(type: Delete) {
+//     delete rootProject.buildDir
+// }
+
+
+
+
+
+// Project-level build.gradle (android/build.gradle)
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+// android/build.gradle (Project-level)
+
+buildscript {
+    ext {
+        // Ensure this Kotlin version is compatible with AGP 8.7.2.
+        // Kotlin 1.9.22 should generally be okay with recent AGPs.
+        kotlinVersion = '1.9.22'
+    }
+    repositories {
+        google()
+        mavenCentral()
+        // For very new AGP/Gradle versions, also ensure Gradle Plugin Portal is available
+        gradlePluginPortal()
+    }
+    dependencies {
+        // Align this with the AGP version used by the Capacitor module (:capacitor)
+        classpath "com.android.tools.build:gradle:8.7.2"
+
+        // Ensure google-services plugin is compatible. 4.4.1 is recent.
+        classpath "com.google.gms:google-services:4.4.1"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+    }
+}
+
+// Global project-level properties (defined outside buildscript for general use)
+// These are applied to all modules unless overridden.
+ext {
+    // For AGP 8.7.2, you might need a newer compileSdkVersion.
+    // Check AGP 8.7.2 release notes. It might require Android 15 Preview (API 35)
+    // If not, API 34 (Android 14) is the current stable requirement for recent AGPs.
+    compileSdkVersion = 34 // Or potentially 35 if AGP 8.7.2 requires it
+    minSdkVersion = 22
+    targetSdkVersion = compileSdkVersion // Match target with compile
+
+    // Review versions of AndroidX libraries for compatibility with new AGP/compileSdk
+    androidxActivityVersion = '1.9.0' // Example of a recent version
+    androidxAppCompatVersion = '1.6.1' // Common stable version
+    androidxCoordinatorLayoutVersion = '1.2.0'
+    androidxCoreVersion = '1.13.1' // Example of a recent version
+    androidxFragmentVersion = '1.7.0' // Example of a recent version
+    coreSplashScreenVersion = '1.0.1'
+    androidxWebkitVersion = '1.10.0' // Example of a recent version
+
+    junitVersion = '4.13.2'
+    androidxJunitVersion = '1.1.5' // Or 1.2.0-alpha02 for very new setups
+    androidxEspressoCoreVersion = '3.5.1' // Or 3.6.0-alpha02
+
+    cordovaAndroidVersion = '10.1.1' // If still used
+    // capacitorAndroidVersion = 'X.Y.Z' // Define your @capacitor/android version if needed elsewhere
+}
+
+// It's generally recommended to configure repositories centrally in settings.gradle
+// via dependencyResolutionManagement.
+// allprojects {
+//     repositories {
+//         google()
+//         mavenCentral()
+//         // Add other repositories like jitpack.io if needed by any dependency
+//         // maven { url 'https://www.jitpack.io' }
+//     }
+// }
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

@@ -1,0 +1,63 @@
+// settings.gradle
+
+// Comments and blank lines are fine here at the very top
+
+// settings.gradle
+
+// Comments and blank lines are fine here at the very top
+
+// THIS MUST BE THE FIRST EXECUTABLE CODE BLOCK
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+// Allows included builds (like Capacitor) to define their own repositories,
+// but prefers those defined here.
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        // Uncomment and customize if you use local libraries:
+        // flatDir {
+        //     dirs 'libs', '../app/libs'
+        // }
+    }
+}
+
+// Set your root project name
+rootProject.name = "ToSyncMobile"
+
+// Include Android app module
+include ':app'
+
+// Include Capacitor Cordova plugin module
+include ':capacitor-cordova-android-plugins'
+project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
+
+// Include Capacitor Android platform (from node_modules)
+def capacitorAndroidPath = "../node_modules/@capacitor/android/capacitor"
+if (file(capacitorAndroidPath).exists()) {
+    includeBuild(capacitorAndroidPath) {
+        dependencySubstitution {
+            substitute module("com.getcapacitor:capacitor-android") using project(":")
+        }
+    }
+} else {
+    logger.warn("Capacitor Android module not found at '${capacitorAndroidPath}'. " +
+        "Ensure node_modules are installed and path is correct.")
+}
+
+// Apply additional Capacitor-specific settings
+def capacitorSettingsFile = file('capacitor.settings.gradle')
+if (capacitorSettingsFile.exists()) {
+    apply from: capacitorSettingsFile
+} else {
+    logger.warn("Missing 'capacitor.settings.gradle'. Make sure it's present in the root project folder.")
+}
+
+

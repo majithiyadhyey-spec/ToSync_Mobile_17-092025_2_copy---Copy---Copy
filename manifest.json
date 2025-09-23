@@ -1,0 +1,22 @@
+{
+  "name": "TOSync",
+  "short_name": "TOSync",
+  "description": "A comprehensive Production Management Web Application for managing projects, workers, and tasks with real-time tracking, Gantt-style planning, and reporting.",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#ffffff",
+  "orientation": "any"
+}
