@@ -35,16 +35,6 @@ if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
 }
 
 module.exports = async (req, res) => {
-  // --- Add CORS headers ---
-  res.setHeader('Access-Control-Allow-Origin', '*'); // for dev; in prod, use your frontend domain
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  // Handle preflight request
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
