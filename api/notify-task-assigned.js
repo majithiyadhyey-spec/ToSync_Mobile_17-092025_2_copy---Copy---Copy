@@ -35,8 +35,15 @@ const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
 // ===== Vercel serverless function =====
 module.exports = async (req, res) => {
   // ===== CORS Headers =====
-  const FRONTEND_ORIGIN = process.env.FRONTEND_URL || 'https://tosyncm24092025-ibpbbpps5-majithiyadhyey-1000s-projects.vercel.app/';
-  res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || 'https://your-production-frontend.vercel.app',
+    'http://localhost:3000', // allow local dev
+  ];
+
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
