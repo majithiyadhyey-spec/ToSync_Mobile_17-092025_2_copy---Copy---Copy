@@ -340,8 +340,26 @@ export const addTask = async (taskData: Omit<Task, 'id' | 'status' | 'dailyTimeS
         };
     }
 
-    // Push notification functionality temporarily disabled
-    // TODO: Re-enable when backend API is properly configured
+    // Send push notification
+    if (newTask.assignedWorkerIds && newTask.assignedWorkerIds.length > 0) {
+        try {
+            await fetch('/api/notify-task-assigned', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    assignedWorkerIds: newTask.assignedWorkerIds,
+                    taskName: newTask.name,
+                    taskId: newTask.id,
+                    projectName: (await supabase.from('project').select('name').eq('project_id', newTask.projectId).single()).data?.name || '',
+                }),
+            });
+            console.log('Notification sent for new task:', newTask.name);
+        } catch (notificationError) {
+            console.error('Failed to send notification for new task:', notificationError);
+        }
+    }
     console.log('Task created successfully:', newTask.name);
     return newTask;
 };
@@ -420,8 +438,26 @@ export const updateTask = async (updatedTask: Task): Promise<Task> => {
     newTask.assignedWorkerIds = updatedTask.assignedWorkerIds;
     newTask.dailyTimeSpent = updatedTask.dailyTimeSpent || {};
 
-    // Push notification functionality temporarily disabled
-    // TODO: Re-enable when backend API is properly configured
+    // Send push notification
+    if (newTask.assignedWorkerIds && newTask.assignedWorkerIds.length > 0) {
+        try {
+            await fetch('/api/notify-task-assigned', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    assignedWorkerIds: newTask.assignedWorkerIds,
+                    taskName: newTask.name,
+                    taskId: newTask.id,
+                    projectName: (await supabase.from('project').select('name').eq('project_id', newTask.projectId).single()).data?.name || '',
+                }),
+            });
+            console.log('Notification sent for updated task:', newTask.name);
+        } catch (notificationError) {
+            console.error('Failed to send notification for updated task:', notificationError);
+        }
+    }
     console.log('Task updated successfully:', newTask.name);
     return newTask;
 };
