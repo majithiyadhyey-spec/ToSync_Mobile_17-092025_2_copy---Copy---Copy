@@ -11,52 +11,9 @@ import { Project, Task, User, AuditLog, AppIntegrations, TeamsIntegrationSetting
 import { Customer, Quotation, Order, InventoryItem, Shipment } from './types/erpTypes';
 import { supabase } from './utils/supabaseClient';
 
-// --- Notification Helper ---
 
-/**
- * Sends a request to the notification server to alert workers of a task assignment.
- * This is a "fire-and-forget" call that does not block the UI.
- * @param workerIds An array of worker IDs to notify.
- * @param task The task that was assigned.
- */
-async function notifyTaskAssigned(workerIds: string[], task: Pick<Task, 'id' | 'name' | 'projectId'>) {
-    if (!workerIds || workerIds.length === 0) return;
 
-    const backendUrl = 'https://tosync-fxnausxrh-majithiyadhyey-1000s-projects.vercel.app';
-    try {
-        const notificationPromise = fetch(`${backendUrl}/notify-task-assigned`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                assignedWorkerIds: workerIds,
-                taskName: "New task assigned",
-            }),
-        });
 
-        // Asynchronously handle the response without blocking the main thread.
-        notificationPromise.then(async (response) => {
-            if (!response.ok) {
-                const errorBody = await response.text();
-                console.error(`Notification server responded with status ${response.status}: ${errorBody}`);
-            }
-        }).catch(networkError => console.error('Failed to send notification request:', networkError));
-
-        console.log('Task assignment notification request sent for task:', task.name);
-    } catch (error) {
-        console.error('Failed to send task assignment notification request:', error);
-    }
-}
-
-export async function callVercelApi() {
-    const backendUrl = 'https://tosync-fxnausxrh-majithiyadhyey-1000s-projects.vercel.app';
-    try {
-        const response = await fetch(`${backendUrl}/api/some-endpoint`);
-        const data = await response.json();
-        console.log('Response from Vercel API:', data);
-    } catch (error) {
-        console.error('Failed to call Vercel API:', error);
-    }
-}
 
 
 // --- Data Transformers ---
@@ -383,8 +340,9 @@ export const addTask = async (taskData: Omit<Task, 'id' | 'status' | 'dailyTimeS
         };
     }
 
-    // Send notification to assigned workers
-    notifyTaskAssigned(taskData.assignedWorkerIds, newTask);
+    // Push notification functionality temporarily disabled
+    // TODO: Re-enable when backend API is properly configured
+    console.log('Task created successfully:', newTask.name);
     return newTask;
 };
 
@@ -462,8 +420,9 @@ export const updateTask = async (updatedTask: Task): Promise<Task> => {
     newTask.assignedWorkerIds = updatedTask.assignedWorkerIds;
     newTask.dailyTimeSpent = updatedTask.dailyTimeSpent || {};
 
-    // Send notification to assigned workers
-    notifyTaskAssigned(updatedTask.assignedWorkerIds, newTask);
+    // Push notification functionality temporarily disabled
+    // TODO: Re-enable when backend API is properly configured
+    console.log('Task updated successfully:', newTask.name);
     return newTask;
 };
 

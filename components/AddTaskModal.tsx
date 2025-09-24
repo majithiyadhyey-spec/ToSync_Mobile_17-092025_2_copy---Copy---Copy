@@ -196,24 +196,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ project, onClose }) => {
             targetName: newTask.name,
         });
 
-        // Send push notification only if actor is Administrator or Planner
-        if (currentUser.role === UserRole.Administrator || currentUser.role === UserRole.Planner) {
-          try {
-            const notifyBase = (import.meta as any).env?.VITE_NOTIFY_BASE_URL || (window as any).__NOTIFY_BASE_URL__ || 'http://localhost:5050';
-            await fetch(`${notifyBase}/notify-task-assigned`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                assignedWorkerIds,
-                taskName: newTask.name,
-                taskId: newTask.id,
-                projectName: project.name,
-              }),
-            });
-          } catch (e) {
-            console.warn('Notification send failed', e);
-          }
-        }
+        // Push notification functionality temporarily disabled
+        // TODO: Re-enable when backend API is properly configured
+        console.log('Task created successfully:', newTask.name);
 
         setNewlyCreatedTask(newTask);
     } catch (err: any) {
