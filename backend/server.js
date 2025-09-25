@@ -1,39 +1,37 @@
 /* eslint-disable */
-const express = require('express');
-const cors = require('cors');
 const admin = require('firebase-admin');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 // Initialize Firebase Admin
-const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const serviceAccountPath =
+  process.env.FIREBASE_SERVICE_ACCOUNT || process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
 if (!admin.apps.length) {
   if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
     admin.initializeApp({
       credential: admin.credential.cert(require(serviceAccountPath)),
     });
   } else {
-    // Fallback to application default credentials if available
     try {
       admin.initializeApp({
         credential: admin.credential.applicationDefault(),
       });
     } catch (e) {
-      console.error('Firebase Admin initialization failed. Set FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS.');
+      console.error(
+        'Firebase Admin initialization failed. Set FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS.'
+      );
       process.exit(1);
     }
   }
 }
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// Supabase client (for persistent token storage)
+// Initialize Supabase client
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 let supabase = null;
+
 if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
   supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
     auth: { persistSession: false },
@@ -45,43 +43,36 @@ if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
 // In-memory fallback token store
 const userIdToTokens = new Map();
 
-// Register or update a worker's device token
-app.post('/register-token', async (req, res) => {
-  const { userId, fcmToken } = req.body || {};
-  if (!userId || !fcmToken) {
-    return res.status(400).json({ error: 'userId and fcmToken are required' });
-  }
-  try {
-    if (supabase) {
-      const { error } = await supabase
-        .from('user_devices')
-        .upsert({ user_id: userId, fcm_token: fcmToken }, { onConflict: 'user_id,fcm_token' });
-      if (error) throw error;
-      return res.json({ ok: true, persisted: true });
-    }
-    const tokens = userIdToTokens.get(userId) || new Set();
-    tokens.add(fcmToken);
-    userIdToTokens.set(userId, tokens);
-    return res.json({ ok: true, persisted: false });
-  } catch (e) {
-    console.error('register-token failed', e);
-    return res.status(500).json({ error: 'Failed to register token' });
-  }
-});
+export default async function handler(req, res) {
+  // ----- CORS Headers -----
+  res.setHeader('Access-Control-Allow-Origin', '*'); // For development, replace with your frontend URL in production
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-// Send notification when a task is assigned
-app.post('/notify-task-assigned', async (req, res) => {
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // Only allow POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
   const { assignedWorkerIds, taskName, taskId, projectName } = req.body || {};
+
   if (!assignedWorkerIds || !Array.isArray(assignedWorkerIds) || assignedWorkerIds.length === 0) {
     return res.status(400).json({ error: 'assignedWorkerIds array is required' });
   }
 
+  // Fetch FCM tokens
   let tokens = [];
   if (supabase) {
     const { data, error } = await supabase
       .from('user_devices')
       .select('fcm_token')
       .in('user_id', assignedWorkerIds);
+
     if (error) {
       console.error('fetch tokens failed', error);
       return res.status(500).json({ error: 'Failed to fetch tokens' });
@@ -90,9 +81,7 @@ app.post('/notify-task-assigned', async (req, res) => {
   } else {
     for (const userId of assignedWorkerIds) {
       const set = userIdToTokens.get(userId);
-      if (set && set.size > 0) {
-        tokens.push(...set.values());
-      }
+      if (set && set.size > 0) tokens.push(...set.values());
     }
   }
 
@@ -123,6 +112,4 @@ app.post('/notify-task-assigned', async (req, res) => {
     console.error('Error sending message:', error);
     return res.status(500).json({ error: 'Failed to send notifications' });
   }
-});
-
-module.exports = app;
+}
