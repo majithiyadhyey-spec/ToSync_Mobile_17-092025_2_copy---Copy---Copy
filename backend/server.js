@@ -1,23 +1,30 @@
+// server.js
 import express from 'express';
 import cors from 'cors';
 import admin from 'firebase-admin';
+import fs from 'fs';
 import { createClient } from '@supabase/supabase-js';
 import serverless from 'serverless-http';
-import fs from 'fs';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 
-// CORS setup
+// ----- CORS Setup -----
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://your-frontend-domain.vercel.app'
+];
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://your-frontend-domain.vercel.app'],
+  origin: allowedOrigins,
   methods: ['GET','POST','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
 }));
-app.options('*', cors()); // preflight
+app.options('*', cors()); // handle preflight
 
 app.use(express.json());
 
-// Firebase Admin init
+// ----- Firebase Admin Initialization -----
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.GOOGLE_APPLICATION_CREDENTIALS;
 if (!admin.apps.length) {
   if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
@@ -26,22 +33,49 @@ if (!admin.apps.length) {
     try {
       admin.initializeApp({ credential: admin.credential.applicationDefault() });
     } catch (e) {
-      console.error('Firebase init failed', e);
+      console.error('Firebase Admin initialization failed', e);
     }
   }
 }
 
-// Supabase client
+// ----- Supabase Client -----
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
+const supabase = (SUPABASE_URL && SUPABASE_SERVICE_KEY)
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
   : null;
 
-// Fallback in-memory tokens
+// ----- In-Memory Fallback -----
 const userIdToTokens = new Map();
 
-// Notify task assigned
+// ----- Register Device Token -----
+app.post('/register-token', async (req, res) => {
+  const { userId, fcmToken } = req.body || {};
+  if (!userId || !fcmToken) {
+    return res.status(400).json({ error: 'userId and fcmToken are required' });
+  }
+
+  try {
+    if (supabase) {
+      const { error } = await supabase
+        .from('user_devices')
+        .upsert({ user_id: userId, fcm_token: fcmToken }, { onConflict: 'user_id,fcm_token' });
+      if (error) throw error;
+      return res.json({ ok: true, persisted: true });
+    }
+
+    // In-memory fallback
+    const tokens = userIdToTokens.get(userId) || new Set();
+    tokens.add(fcmToken);
+    userIdToTokens.set(userId, tokens);
+    return res.json({ ok: true, persisted: false });
+  } catch (e) {
+    console.error('register-token failed', e);
+    return res.status(500).json({ error: 'Failed to register token' });
+  }
+});
+
+// ----- Notify Task Assigned -----
 app.post('/notify-task-assigned', async (req, res) => {
   const { assignedWorkerIds, taskName, taskId, projectName } = req.body || {};
   if (!assignedWorkerIds || !Array.isArray(assignedWorkerIds) || assignedWorkerIds.length === 0) {
@@ -91,5 +125,5 @@ app.post('/notify-task-assigned', async (req, res) => {
   }
 });
 
-// Vercel export
+// ----- Export for Vercel -----
 export default serverless(app);
