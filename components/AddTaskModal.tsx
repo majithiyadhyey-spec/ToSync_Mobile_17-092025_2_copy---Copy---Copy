@@ -199,7 +199,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ project, onClose }) => {
         // Send push notification only if actor is Administrator or Planner
         if (currentUser.role === UserRole.Administrator || currentUser.role === UserRole.Planner) {
           try {
-            const notifyBase = (import.meta as any).env?.VITE_NOTIFY_BASE_URL || (window as any).__NOTIFY_BASE_URL__ || 'http://localhost:5050';
+            const notifyBase = (import.meta as any).env?.VITE_NOTIFY_BASE_URL || (window as any).__NOTIFY_BASE_URL__ || 'https://tosync-mobile-backend-m3nfh1a2w-majithiyadhyey-1000s-projects.vercel.app';
             await fetch(`${notifyBase}/notify-task-assigned`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
