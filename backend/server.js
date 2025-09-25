@@ -1,6 +1,5 @@
 // server.js
 import express from 'express';
-import cors from 'cors';
 import admin from 'firebase-admin';
 import fs from 'fs';
 import { createClient } from '@supabase/supabase-js';
@@ -10,17 +9,14 @@ dotenv.config();
 
 const app = express();
 
-// ----- CORS Setup -----
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://your-frontend-domain.vercel.app'
-];
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ['GET','POST','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
-}));
-app.options('*', cors()); // handle preflight
+// ----- Manual CORS Headers -----
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173'); // frontend URL
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(200); // respond to preflight
+  next();
+});
 
 app.use(express.json());
 
@@ -45,7 +41,7 @@ const supabase = (SUPABASE_URL && SUPABASE_SERVICE_KEY)
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
   : null;
 
-// ----- In-Memory Fallback -----
+// ----- In-Memory Fallback Token Store -----
 const userIdToTokens = new Map();
 
 // ----- Register Device Token -----
@@ -64,7 +60,6 @@ app.post('/register-token', async (req, res) => {
       return res.json({ ok: true, persisted: true });
     }
 
-    // In-memory fallback
     const tokens = userIdToTokens.get(userId) || new Set();
     tokens.add(fcmToken);
     userIdToTokens.set(userId, tokens);
