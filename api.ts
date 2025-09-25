@@ -696,6 +696,17 @@ export const restoreItem = async (itemType: 'project' | 'task' | 'user', itemId:
     if (error) throw error;
 };
 
+export const registerFcmToken = async (userId: string, token: string): Promise<void> => {
+    const { error } = await supabase.from('user_devices').upsert(
+        { user_id: userId, fcm_token: token },
+        { onConflict: 'fcm_token' }
+    );
+    if (error) {
+        console.error("Error registering FCM token:", error);
+        throw error;
+    }
+};
+
 export const permanentlyDeleteItem = async (itemType: 'project' | 'task' | 'user', itemId: string): Promise<void> => {
     if (itemType === 'project') {
         // --- Permanently Deleting a Project ---

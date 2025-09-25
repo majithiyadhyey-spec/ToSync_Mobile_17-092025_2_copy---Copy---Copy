@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   try {
     const { error } = await supabase
       .from('user_devices')
-      .upsert({ user_id: userId, fcm_token: fcmToken }, { onConflict: 'user_id,fcm_token' });
+      .upsert({ user_id: userId, fcm_token: fcmToken }, { onConflict: 'fcm_token' });
     if (error) throw error;
     return res.json({ ok: true, persisted: true });
   } catch (e) {
