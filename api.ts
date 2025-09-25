@@ -24,7 +24,7 @@ async function notifyTaskAssigned(workerIds: string[], task: Pick<Task, 'id' | '
 
     const backendUrl = 'https://tosync-mobile-backend-m3nfh1a2w-majithiyadhyey-1000s-projects.vercel.app';
     try {
-        const notificationPromise = fetch(`${backendUrl}/api/notify-task-assigned`, {
+        const notificationPromise = fetch(`${backendUrl}/notify-task-assigned`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
