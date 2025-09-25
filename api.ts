@@ -47,16 +47,16 @@ async function notifyTaskAssigned(workerIds: string[], task: Pick<Task, 'id' | '
     }
 }
 
-export async function callVercelApi() {
-    const backendUrl = 'https://tosync-fxnausxrh-majithiyadhyey-1000s-projects.vercel.app';
-    try {
-        const response = await fetch(`${backendUrl}/api/notify-task-assigned`);
-        const data = await response.json();
-        console.log('Response from Vercel API:', data);
-    } catch (error) {
-        console.error('Failed to call Vercel API:', error);
-    }
-}
+// export async function callVercelApi() {
+//     const backendUrl = 'https://tosync-fxnausxrh-majithiyadhyey-1000s-projects.vercel.app';
+//     try {
+//         const response = await fetch(`${backendUrl}/api/notify-task-assigned`);
+//         const data = await response.json();
+//         console.log('Response from Vercel API:', data);
+//     } catch (error) {
+//         console.error('Failed to call Vercel API:', error);
+//     }
+// }
 
 
 // --- Data Transformers ---
