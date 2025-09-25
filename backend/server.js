@@ -2,23 +2,22 @@ import express from 'express';
 import cors from 'cors';
 import admin from 'firebase-admin';
 import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
 import serverless from 'serverless-http';
+import fs from 'fs';
 
 const app = express();
 
-// CORS
+// CORS setup
 app.use(cors({
   origin: ['http://localhost:5173', 'https://your-frontend-domain.vercel.app'],
   methods: ['GET','POST','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
 }));
-app.options('*', cors());
+app.options('*', cors()); // preflight
 
-// Express JSON
 app.use(express.json());
 
-// Firebase Admin initialization
+// Firebase Admin init
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.GOOGLE_APPLICATION_CREDENTIALS;
 if (!admin.apps.length) {
   if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
@@ -27,7 +26,7 @@ if (!admin.apps.length) {
     try {
       admin.initializeApp({ credential: admin.credential.applicationDefault() });
     } catch (e) {
-      console.error('Firebase Admin init failed', e);
+      console.error('Firebase init failed', e);
     }
   }
 }
@@ -39,7 +38,7 @@ const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
   : null;
 
-// In-memory fallback
+// Fallback in-memory tokens
 const userIdToTokens = new Map();
 
 // Notify task assigned
@@ -64,9 +63,7 @@ app.post('/notify-task-assigned', async (req, res) => {
     }
   }
 
-  if (tokens.length === 0) {
-    return res.json({ sent: 0, message: 'No tokens registered for assigned workers' });
-  }
+  if (tokens.length === 0) return res.json({ sent: 0, message: 'No tokens registered' });
 
   const payload = {
     notification: {
@@ -94,5 +91,5 @@ app.post('/notify-task-assigned', async (req, res) => {
   }
 });
 
-// Export for Vercel
+// Vercel export
 export default serverless(app);
