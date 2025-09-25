@@ -3,12 +3,18 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Camera -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Storage (Android < 13) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- Storage (Android 13+) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Push Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Wake lock (ensure notifications wake phone) -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Cloud Messaging -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
     <application
@@ -19,7 +25,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- Default notification icon -->
+        <!-- Default notification icon for Firebase -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_launcher_foreground" />
@@ -31,13 +37,15 @@
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
-        <!-- File provider for camera uploads -->
+        <!-- File provider for Camera -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -48,7 +56,26 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- No need for custom Firebase service or deprecated receivers -->
+        <!-- App Firebase Messaging Service -->
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Ensure push notifications work properly (legacy receivers may be optional) -->
+        <receiver
+            android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

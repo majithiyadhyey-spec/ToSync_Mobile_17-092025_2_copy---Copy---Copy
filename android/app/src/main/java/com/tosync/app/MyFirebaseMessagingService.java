@@ -60,7 +60,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Register token with backend
         new Thread(() -> {
             try {
-                java.net.URL url = new java.net.URL("https://tosync-fxnausxrh-majithiyadhyey-1000s-projects.vercel.app/api/register-token");
+                java.net.URL url = new java.net.URL("http://10.0.2.2:5050/register-token"); // Use 10.0.2.2 for Android emulator localhost
                 java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");

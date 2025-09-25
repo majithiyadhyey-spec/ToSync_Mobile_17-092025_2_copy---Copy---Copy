@@ -83,7 +83,7 @@ export async function registerPush(userId: string) {
       console.log('Capacitor PushNotifications registration event - Device token:', token.value);
 
       // Backend URL
-      const backendUrl = '/api';
+      const backendUrl = 'https://tosync-fxnausxrh-majithiyadhyey-1000s-projects.vercel.app';
       console.log('Attempting to send FCM token to backend:', backendUrl);
 
       try {

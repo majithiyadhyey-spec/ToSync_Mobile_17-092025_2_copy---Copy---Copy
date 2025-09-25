@@ -11,9 +11,52 @@ import { Project, Task, User, AuditLog, AppIntegrations, TeamsIntegrationSetting
 import { Customer, Quotation, Order, InventoryItem, Shipment } from './types/erpTypes';
 import { supabase } from './utils/supabaseClient';
 
+// --- Notification Helper ---
 
+/**
+ * Sends a request to the notification server to alert workers of a task assignment.
+ * This is a "fire-and-forget" call that does not block the UI.
+ * @param workerIds An array of worker IDs to notify.
+ * @param task The task that was assigned.
+ */
+async function notifyTaskAssigned(workerIds: string[], task: Pick<Task, 'id' | 'name' | 'projectId'>) {
+    if (!workerIds || workerIds.length === 0) return;
 
+    const backendUrl = 'https://tosync-fxnausxrh-majithiyadhyey-1000s-projects.vercel.app';
+    try {
+        const notificationPromise = fetch(`${backendUrl}/notify-task-assigned`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                assignedWorkerIds: workerIds,
+                taskName: "New task assigned",
+            }),
+        });
 
+        // Asynchronously handle the response without blocking the main thread.
+        notificationPromise.then(async (response) => {
+            if (!response.ok) {
+                const errorBody = await response.text();
+                console.error(`Notification server responded with status ${response.status}: ${errorBody}`);
+            }
+        }).catch(networkError => console.error('Failed to send notification request:', networkError));
+
+        console.log('Task assignment notification request sent for task:', task.name);
+    } catch (error) {
+        console.error('Failed to send task assignment notification request:', error);
+    }
+}
+
+export async function callVercelApi() {
+    const backendUrl = 'https://tosync-fxnausxrh-majithiyadhyey-1000s-projects.vercel.app';
+    try {
+        const response = await fetch(`${backendUrl}/api/some-endpoint`);
+        const data = await response.json();
+        console.log('Response from Vercel API:', data);
+    } catch (error) {
+        console.error('Failed to call Vercel API:', error);
+    }
+}
 
 
 // --- Data Transformers ---
@@ -340,27 +383,8 @@ export const addTask = async (taskData: Omit<Task, 'id' | 'status' | 'dailyTimeS
         };
     }
 
-    // Send push notification
-    if (newTask.assignedWorkerIds && newTask.assignedWorkerIds.length > 0) {
-        try {
-            await fetch('/api/notify-task-assigned', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    assignedWorkerIds: newTask.assignedWorkerIds,
-                    taskName: newTask.name,
-                    taskId: newTask.id,
-                    projectName: (await supabase.from('project').select('name').eq('project_id', newTask.projectId).single()).data?.name || '',
-                }),
-            });
-            console.log('Notification sent for new task:', newTask.name);
-        } catch (notificationError) {
-            console.error('Failed to send notification for new task:', notificationError);
-        }
-    }
-    console.log('Task created successfully:', newTask.name);
+    // Send notification to assigned workers
+    notifyTaskAssigned(taskData.assignedWorkerIds, newTask);
     return newTask;
 };
 
@@ -438,27 +462,8 @@ export const updateTask = async (updatedTask: Task): Promise<Task> => {
     newTask.assignedWorkerIds = updatedTask.assignedWorkerIds;
     newTask.dailyTimeSpent = updatedTask.dailyTimeSpent || {};
 
-    // Send push notification
-    if (newTask.assignedWorkerIds && newTask.assignedWorkerIds.length > 0) {
-        try {
-            await fetch('/api/notify-task-assigned', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    assignedWorkerIds: newTask.assignedWorkerIds,
-                    taskName: newTask.name,
-                    taskId: newTask.id,
-                    projectName: (await supabase.from('project').select('name').eq('project_id', newTask.projectId).single()).data?.name || '',
-                }),
-            });
-            console.log('Notification sent for updated task:', newTask.name);
-        } catch (notificationError) {
-            console.error('Failed to send notification for updated task:', notificationError);
-        }
-    }
-    console.log('Task updated successfully:', newTask.name);
+    // Send notification to assigned workers
+    notifyTaskAssigned(updatedTask.assignedWorkerIds, newTask);
     return newTask;
 };
 
@@ -694,17 +699,6 @@ export const restoreItem = async (itemType: 'project' | 'task' | 'user', itemId:
     
     const { error } = await supabase.from(table).update({ deleted_at: null }).eq(idColumn, itemId);
     if (error) throw error;
-};
-
-export const registerFcmToken = async (userId: string, token: string): Promise<void> => {
-    const { error } = await supabase.from('user_devices').upsert(
-        { user_id: userId, fcm_token: token },
-        { onConflict: 'fcm_token' }
-    );
-    if (error) {
-        console.error("Error registering FCM token:", error);
-        throw error;
-    }
 };
 
 export const permanentlyDeleteItem = async (itemType: 'project' | 'task' | 'user', itemId: string): Promise<void> => {
