@@ -22,9 +22,9 @@ import { supabase } from './utils/supabaseClient';
 async function notifyTaskAssigned(workerIds: string[], task: Pick<Task, 'id' | 'name' | 'projectId'>) {
     if (!workerIds || workerIds.length === 0) return;
 
-    const backendUrl = 'https://tosync-fxnausxrh-majithiyadhyey-1000s-projects.vercel.app';
+    const backendUrl = 'https://tosync-mobile-backend-m3nfh1a2w-majithiyadhyey-1000s-projects.vercel.app';
     try {
-        const notificationPromise = fetch(`${backendUrl}/notify-task-assigned`, {
+        const notificationPromise = fetch(`${backendUrl}/api/notify-task-assigned`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
