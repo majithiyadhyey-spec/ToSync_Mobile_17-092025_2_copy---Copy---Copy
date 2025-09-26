@@ -1,32 +1,25 @@
 // src/services/notifications.ts
-import { PushNotifications } from '@capacitor/push-notifications';
+import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Capacitor } from '@capacitor/core';
 // import { PushNotifications } from '@capacitor/push-notifications';
 
 export async function registerPush(userId: string) {
-  if (!Capacitor.isNativePlatform()) {
-    console.warn('PushNotifications plugin is not available on web. Skipping push registration.');
-    return;
-  }
   try {
-    let permStatus = await PushNotifications.checkPermissions();
-    if (permStatus.receive !== 'granted') {
-      permStatus = await PushNotifications.requestPermissions();
-    }
-    if (permStatus.receive !== 'granted') {
-      console.log('User denied permissions!');
-      return;
-    }
-    await PushNotifications.register();
-    PushNotifications.addListener('registration', async (token) => {
-      console.log('Device token: ', token.value);
+    await FirebaseMessaging.requestPermissions();
+
+    FirebaseMessaging.addListener('notificationReceived', (notification) => {
+      console.log('Notification received:', notification);
+    });
+
+    // Get the FCM token and send to backend
+    const tokenResult = await FirebaseMessaging.getToken();
+    if (tokenResult && tokenResult.token) {
       const backendUrl = 'https://tosync-mobile-backend-m3nfh1a2w-majithiyadhyey-1000s-projects.vercel.app';
-      console.log('Attempting to send FCM token to backend:', backendUrl);
       try {
         const response = await fetch(`${backendUrl}/register-token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, fcmToken: token.value }),
+          body: JSON.stringify({ userId, fcmToken: tokenResult.token }),
         });
         if (!response.ok) {
           const errorBody = await response.text();
@@ -37,10 +30,7 @@ export async function registerPush(userId: string) {
       } catch (networkError) {
         console.error('Failed to send token registration request:', networkError);
       }
-    });
-    PushNotifications.addListener('registrationError', (error) => {
-      console.error('Error on registration: ' + JSON.stringify(error));
-    });
+    }
   } catch (e) {
     console.error('Push registration failed', e);
   }
