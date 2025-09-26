@@ -11,7 +11,7 @@ const app = express();
 
 // ----- Manual CORS Headers -----
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5173'); // local frontend
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); // local frontend
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(200); // respond to preflight
