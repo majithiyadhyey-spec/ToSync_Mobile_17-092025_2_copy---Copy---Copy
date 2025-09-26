@@ -11,7 +11,7 @@ const app = express();
 
 // ----- Manual CORS Headers -----
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173'); // frontend URL
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173'); // local frontend
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(200); // respond to preflight
@@ -84,7 +84,7 @@ app.post('/notify-task-assigned', async (req, res) => {
       .select('fcm_token')
       .in('user_id', assignedWorkerIds);
     if (error) return res.status(500).json({ error: 'Failed to fetch tokens' });
-    tokens = (data || []).map(d => d.fcm_token);
+    tokens = (data || []).map(d => d.fcm_token).filter(Boolean);
   } else {
     for (const userId of assignedWorkerIds) {
       const set = userIdToTokens.get(userId);
@@ -108,11 +108,20 @@ app.post('/notify-task-assigned', async (req, res) => {
   };
 
   try {
-    const response = await admin.messaging().sendMulticast({
+    const response = await admin.messaging().sendEachForMulticast({
       tokens,
       notification: payload.notification,
       data: payload.data,
     });
+
+    // Optional: log failed tokens
+    const failedTokens = response.responses
+      .map((r, i) => (!r.success ? tokens[i] : null))
+      .filter(Boolean);
+    if (failedTokens.length > 0) {
+      console.warn('Failed tokens:', failedTokens);
+    }
+
     return res.json({ sent: response.successCount, failed: response.failureCount });
   } catch (error) {
     console.error('Error sending notification:', error);
