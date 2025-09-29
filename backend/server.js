@@ -5,11 +5,13 @@ import fs from 'fs';
 import { createClient } from '@supabase/supabase-js';
 import serverless from 'serverless-http';
 import dotenv from 'dotenv';
+import cors from 'cors';
 dotenv.config();
 
 const app = express();
 
-
+// Enable CORS for all routes and origins
+app.use(cors());
 
 app.use(express.json());
 
