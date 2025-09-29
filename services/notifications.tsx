@@ -133,6 +133,9 @@ class PushNotificationManager {
     private handleTaskAssignmentNotification(data: any): void {
         // Update local app state, refresh task list, etc.
         console.log('New task assigned:', data.taskName);
+
+        // In a real app, you would use a toast notification library
+        alert(`New Task Assigned: ${data.taskName} in project ${data.projectName}`);
     
         // Emit custom event for app components to listen to
         window.dispatchEvent(new CustomEvent('taskAssigned', { 
