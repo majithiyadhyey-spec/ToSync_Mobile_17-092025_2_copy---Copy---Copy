@@ -1,4 +1,5 @@
 // server.js
+
 import express from 'express';
 import admin from 'firebase-admin';
 import fs from 'fs';
@@ -6,16 +7,23 @@ import { createClient } from '@supabase/supabase-js';
 import serverless from 'serverless-http';
 import dotenv from 'dotenv';
 import cors from 'cors';
+
 dotenv.config();
 
 const app = express();
 
-// Enable CORS for all routes and origins
-app.use(cors());
+// ===== ✅ CORS CONFIGURATION =====
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.options('*', cors());
 
+// ===== ✅ MIDDLEWARE =====
 app.use(express.json());
 
-// ----- Firebase Admin Initialization -----
+// ===== ✅ FIREBASE ADMIN INIT =====
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.GOOGLE_APPLICATION_CREDENTIALS;
 if (!admin.apps.length) {
   if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
@@ -29,17 +37,17 @@ if (!admin.apps.length) {
   }
 }
 
-// ----- Supabase Client -----
+// ===== ✅ SUPABASE INIT =====
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const supabase = (SUPABASE_URL && SUPABASE_SERVICE_KEY)
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
   : null;
 
-// ----- In-Memory Fallback Token Store -----
+// ===== ✅ In-memory token fallback (for local dev) =====
 const userIdToTokens = new Map();
 
-// ----- Register Device Token -----
+// ===== ✅ Register FCM Token =====
 app.post('/register-token', async (req, res) => {
   const { userId, fcmToken } = req.body || {};
   if (!userId || !fcmToken) {
@@ -65,7 +73,7 @@ app.post('/register-token', async (req, res) => {
   }
 });
 
-// ----- Notify Task Assigned -----
+// ===== ✅ Notify Task Assigned =====
 app.post('/notify-task-assigned', async (req, res) => {
   const { assignedWorkerIds, taskName, taskId, projectName } = req.body || {};
   if (!assignedWorkerIds || !Array.isArray(assignedWorkerIds) || assignedWorkerIds.length === 0) {
@@ -109,7 +117,6 @@ app.post('/notify-task-assigned', async (req, res) => {
       data: payload.data,
     });
 
-    // Optional: log failed tokens
     const failedTokens = response.responses
       .map((r, i) => (!r.success ? tokens[i] : null))
       .filter(Boolean);
@@ -124,5 +131,5 @@ app.post('/notify-task-assigned', async (req, res) => {
   }
 });
 
-// ----- Export for Vercel -----
+// ===== ✅ Export for Vercel =====
 export default serverless(app);
