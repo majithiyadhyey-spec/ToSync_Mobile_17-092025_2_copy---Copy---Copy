@@ -4,11 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.tosync.app',
   appName: 'tosync-app',
   webDir: 'dist',
-  plugins: {
-    PushNotifications: {
-      presentationOptions: ["badge", "sound", "alert"],
-    },
-  },
+  plugins: {},
 };
 
 export default config;
